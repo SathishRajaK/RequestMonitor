@@ -1,0 +1,101 @@
+﻿@{
+    ViewBag.Title = "Request Monitor";
+}
+
+<h2>Request Monitor</h2>
+
+<!-- Button to manually refresh the logs -->
+<button id="refreshButton">Refresh Logs</button>
+
+<!-- This is where we display the request logs -->
+<table id="requestLogsTable" class="table">
+    <thead>
+        <tr>
+            <th>HTTP Method</th>
+            <th>Request URL</th>
+            <th>Timestamp</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data will be populated dynamically -->
+    </tbody>
+</table>
+
+<!-- jQuery library -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Function to fetch request logs and update the table
+    function loadRequestLogs() {
+        $.ajax({
+            url: '/api/req',  // Endpoint to get all requests
+            method: 'GET',
+            success: function (data) {
+                // Clear the existing rows
+                $('#requestLogsTable tbody').empty();
+
+                // Loop through each request log and append it to the table
+                data.forEach(function (log) {
+                    var row = '<tr>' +
+                        '<td>' + log.HttpMethod + '</td>' +
+                        '<td>' + log.Url + '</td>' +
+                        '<td>' + new Date(log.Timestamp).toLocaleString() + '</td>' +
+                        // New button added for each row to trigger the POST call
+                        '<td><button class="postButton" data-httpmethod="' + log.HttpMethod + '" data-url="' + log.Url + '" data-timestamp="' + log.Timestamp + '">Post Data</button></td>' +
+                        '</tr>';
+                    $('#requestLogsTable tbody').append(row);
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching request logs: ', error);
+            }
+        });
+    }
+
+    // Function to post data to another API endpoint
+    function postData(postData) {
+        $.ajax({
+            url: 'https://localhost:44315/Testing',  // Endpoint for POSTing data
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(postData),
+            success: function (response) {
+                console.log('Data posted successfully:', response);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error posting data:', error);
+            }
+        });
+    }
+
+    // When the document is ready, load logs and setup event handlers
+    $(document).ready(function () {
+        // Load request logs on page load
+        loadRequestLogs();
+
+        // Automatically refresh every 5 seconds
+        setInterval(loadRequestLogs, 5000);  // 5000ms = 5 seconds
+
+        // Manual refresh on button click
+        $('#refreshButton').click(function () {
+            loadRequestLogs();
+        });
+
+        // Delegate click event for dynamically added post buttons
+        $('#requestLogsTable tbody').on('click', '.postButton', function () {
+            // Retrieve log data from data attributes
+
+
+            // Prepare data to be posted
+            var dataToPost = {
+                AgentId: "1234",
+                AgentPassword: "1234",
+                Extension: "1234",
+                ExtensionPassword: "1234"
+            };
+
+            // Call the postData function to send data to the other API
+            postData(dataToPost);
+        });
+    });
+</script>
