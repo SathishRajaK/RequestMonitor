@@ -1,0 +1,36 @@
+name: Build and Deploy .NET Framework 4.7.2 Web API
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1
+
+      - name: Restore NuGet Packages
+        run: nuget restore RequestMonitor.sln
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Build Solution
+        run: msbuild RequestMonitor.sln /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: published-api
+          path: |
+            RequestMonitor/bin/Release/
